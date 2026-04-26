@@ -170,13 +170,16 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .quick-add-input::placeholder{color:var(--text-muted)}
 
 
+/* ── Hamburger ── */
+#hamburger{width:34px;height:34px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg-card);cursor:pointer;align-items:center;justify-content:center;color:var(--text-secondary);transition:all .15s;flex-shrink:0;display:none}
+#hamburger:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
 /* ── Sync indicator ── */
-#sync-indicator{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);padding:0 6px;height:34px;border-radius:var(--radius-sm);transition:all .2s;white-space:nowrap}
+#sync-indicator{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);padding:0 4px;height:34px;border-radius:var(--radius-sm);transition:all .2s;white-space:nowrap}
 #sync-dot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .3s}
 #sync-indicator.syncing #sync-dot{background:#f59e0b;animation:pulse 1s infinite}
 #sync-indicator.ok #sync-dot{background:var(--primary)}
 #sync-indicator.error #sync-dot{background:#ef4444}
-#sync-indicator.ok #sync-text,#sync-indicator.error #sync-text{font-size:11px}
+#sync-indicator.ok #sync-text,#sync-indicator.error #sync-text{font-size:10px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 /* Sync conflict modal */
 .conflict-option{display:flex;gap:10px;margin-bottom:8px}
@@ -184,6 +187,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .conflict-btn:hover{border-color:var(--primary);background:var(--primary-light)}
 .conflict-btn strong{display:block;font-size:13px;margin-bottom:3px}
 
+.panel-user-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--primary-light);border-radius:var(--radius-sm);font-size:12px;color:var(--primary);font-weight:500;margin-bottom:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ── Auth screen ── */
 #auth-screen{position:fixed;inset:0;background:var(--bg-sidebar);z-index:9999;display:flex;align-items:center;justify-content:center}
 #auth-screen.hidden{display:none}
@@ -286,9 +290,24 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .empty-state p{font-size:13px}
 
 @media(max-width:768px){
-  #sidebar{position:absolute;height:100vh}
-  #sidebar.collapsed{width:0}
+  /* Sidebar becomes a drawer */
+  #sidebar{position:fixed;top:0;left:0;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .25s;width:var(--sidebar-w)!important}
+  #sidebar.mobile-open{transform:translateX(0)}
+  #sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:299}
+  #sb-overlay.show{display:block}
+  #hamburger{display:flex}
+  /* Topbar: hide desktop sb-toggle since we use hamburger */
+  #sb-toggle{display:none}
   #right-panel{width:100vw}
+  /* Always show item actions on touch */
+  .item-actions{opacity:1!important}
+  .subcat-tools{opacity:1!important}
+  .cat-del-btn{opacity:1!important}
+  .sub-del-btn{opacity:1!important}
+}
+@media(min-width:769px){
+  #hamburger{display:none}
+  #sb-overlay{display:none!important}
 }
 </style>
 </head>
@@ -321,6 +340,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   </div>
 </div>
 
+<div id="sb-overlay"></div>
 <div id="sidebar">
   <div class="sb-header">
     <div class="logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
@@ -346,12 +366,11 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   <div id="topbar">
     <div id="cat-tabs"></div>
     <div class="topbar-tools">
+      <button id="hamburger" title="選單"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
       <div id="search-bar"><input type="text" id="search-input" placeholder="搜尋任務…"></div>
-      <div id="user-badge" onclick="doSignOut()" title="點擊登出"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span id="user-email"></span></div>
       <div id="sync-indicator" title="同步狀態"><span id="sync-dot"></span><span id="sync-text"></span></div>
       <button class="tool-btn" id="search-btn" title="搜尋"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
-      <button class="tool-btn" id="sort-btn" title="排序/篩選"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6" stroke-width="3" stroke-linecap="round"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-width="3" stroke-linecap="round"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-width="3" stroke-linecap="round"/></svg></button>
-      <button class="tool-btn" id="mgr-btn" title="管理分類"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
+      <button class="tool-btn" id="sort-btn" title="選單"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6" stroke-width="3" stroke-linecap="round"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-width="3" stroke-linecap="round"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-width="3" stroke-linecap="round"/></svg></button>
       <button class="tool-btn" id="add-btn" title="新增任務" style="background:var(--primary);color:#fff;border-color:var(--primary)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
     </div>
   </div>
@@ -498,7 +517,7 @@ async function doSignOut(){
   D={categories:[],items:[]};
   if(currentUserId) localStorage.removeItem(userKey(KEY));
   currentUserId=null; sbSession=null;
-  document.getElementById('user-email').textContent='';
+  // user-email removed from DOM
   document.getElementById('sync-text').textContent='';
   document.getElementById('sync-dot').style.background='';
   document.getElementById('auth-screen').classList.remove('hidden');
@@ -512,8 +531,8 @@ function doGuest(){
   sbSession=null; currentUserId=null;
   isGuestMode=true;
   document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('user-email').textContent='訪客';
-  document.getElementById('user-badge').title='訪客模式（資料不會儲存）';
+  window._userEmail='訪客';
+  // user-badge removed from DOM
   document.getElementById('sync-text').textContent='訪客模式';
   document.getElementById('sync-dot').style.background='#f59e0b';
   // Seed demo data in memory only
@@ -543,7 +562,7 @@ async function onSignedIn(session){
     user: {id: session.user.id, email: session.user.email}
   }));
   document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('user-email').textContent = session.user.email;
+  window._userEmail = session.user.email;
   // Load local cache then pull from cloud
   load(); runRT();
   if(!D.categories.length&&!D.items.length) seedDemo();
@@ -1316,6 +1335,11 @@ $('sb-toggle').addEventListener('click',()=>{
   s.classList.toggle('collapsed');
   $('sb-toggle').innerHTML=s.classList.contains('collapsed')?`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 });
+function openMobileSidebar(){ $('sidebar').classList.add('mobile-open'); $('sb-overlay').classList.add('show'); }
+function closeMobileSidebar(){ $('sidebar').classList.remove('mobile-open'); $('sb-overlay').classList.remove('show'); }
+$('hamburger').addEventListener('click', openMobileSidebar);
+$('sb-overlay').addEventListener('click', closeMobileSidebar);
+$('sb-nav').addEventListener('click', ev=>{ if(ev.target.closest('.nav-item') && window.innerWidth<=768) closeMobileSidebar(); });
 $('search-btn').addEventListener('click',()=>{
   const bar=$('search-bar');
   bar.classList.toggle('open');
@@ -1324,11 +1348,10 @@ $('search-btn').addEventListener('click',()=>{
   else{ q=''; $('search-input').value=''; render(); }
 });
 $('search-input').addEventListener('input',ev=>{ q=ev.target.value; render(); });
-$('sort-btn').addEventListener('click',()=>openPanel('sort'));
-$('open-settings').addEventListener('click',()=>openPanel('settings'));
+$('sort-btn').addEventListener('click',()=>openPanel());
+$('open-settings').addEventListener('click',()=>openPanel());
 $('panel-close').addEventListener('click',closePanel);
 $('panel-backdrop').addEventListener('click',closePanel);
-$('mgr-btn').addEventListener('click',showMgrModal);
 $('add-btn').addEventListener('click',()=>showAddItem(null,null));
 
 function setView(v){
@@ -1338,53 +1361,55 @@ function setView(v){
 }
 
 // ── Panel ──
-function openPanel(type){
+function openPanel(){
   const body=$('panel-body');
-  $('panel-title').textContent=type==='sort'?'排序 / 篩選':'設定';
-  if(type==='sort'){
-    const tv=(key,label,id)=>`<div class="toggle-row"><span class="toggle-label">${label}</span><label class="toggle"><input type="checkbox" id="${id}" ${S[key]?'checked':''}><span class="toggle-track"></span></label></div>`;
-    body.innerHTML=`
-      <div class="panel-sec"><div class="panel-sec-title">篩選</div>
-        ${tv('hideCompleted','隱藏已完成','t-hc')}
-        ${tv('completedSink','完成項目沉底','t-cs')}
+  $('panel-title').textContent='選單';
+  const tv=(key,label,id)=>`<div class="toggle-row"><span class="toggle-label">${label}</span><label class="toggle"><input type="checkbox" id="${id}" ${S[key]?'checked':''}><span class="toggle-track"></span></label></div>`;
+  const userLine=window._userEmail?`<div class="panel-user-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${window._userEmail}</div>`:'';
+  body.innerHTML=`
+    ${userLine}
+    <div class="panel-sec"><div class="panel-sec-title">分類管理</div>
+      <button class="action-btn" id="p-mgr" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> 管理分類</button>
+    </div>
+    <div class="panel-sec"><div class="panel-sec-title">篩選</div>
+      ${tv('hideCompleted','隱藏已完成','t-hc')}
+      ${tv('completedSink','完成項目沉底','t-cs')}
+    </div>
+    <div class="panel-sec"><div class="panel-sec-title">排序方式</div>
+      <div class="sort-opts">
+        ${[['manual','手動排序'],['priority','優先度'],['due','到期日'],['created','建立時間']].map(([v,l])=>`<label class="sort-opt${S.sortBy===v?' active':''}"><input type="radio" name="srt" value="${v}" ${S.sortBy===v?'checked':''}> ${l}</label>`).join('')}
       </div>
-      <div class="panel-sec"><div class="panel-sec-title">排序方式</div>
-        <div class="sort-opts">
-          ${[['manual','手動排序'],['priority','優先度'],['due','到期日'],['created','建立時間']].map(([v,l])=>`<label class="sort-opt${S.sortBy===v?' active':''}"><input type="radio" name="srt" value="${v}" ${S.sortBy===v?'checked':''}> ${l}</label>`).join('')}
-        </div>
-      </div>
-      <div class="panel-sec"><div class="panel-sec-title">顯示欄位</div>
-        ${tv('showPriority','優先度標籤','t-sp')}
-        ${tv('showDue','到期日','t-sd')}
-        ${tv('showTags','標籤','t-st')}
-        ${tv('showTagAdd','新增標籤按鈕（＋）','t-sta')}
-        ${tv('showRoutine','週期標籤','t-sr')}
-        ${tv('showQuickAdd','快速新增項目欄','t-sqa')}
-        ${tv('showSubInput','新增子項目欄位','t-ssi')}
-      </div>`;
-    $('t-hc').onchange=ev=>{ S.hideCompleted=ev.target.checked; saveS(); render(); };
-    $('t-cs').onchange=ev=>{ S.completedSink=ev.target.checked; saveS(); render(); };
-    ['showPriority','showDue','showTags','showTagAdd','showRoutine','showQuickAdd','showSubInput'].forEach((key,i)=>{
-      const ids=['t-sp','t-sd','t-st','t-sta','t-sr','t-sqa','t-ssi'];
-      $(ids[i]).onchange=ev=>{ S[key]=ev.target.checked; saveS(); render(); };
-    });
-    body.querySelectorAll('input[name="srt"]').forEach(r=>r.onchange=ev=>{ S.sortBy=ev.target.value; saveS(); render(); body.querySelectorAll('.sort-opt').forEach(o=>o.classList.toggle('active',o.querySelector('input').value===S.sortBy)); });
-  } else {
-    body.innerHTML=`
-      <div class="panel-sec"><div class="panel-sec-title">資料備份</div>
-        <button class="action-btn" id="p-ejson" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> 匯出 JSON</button>
-        <button class="action-btn" id="p-ecsv" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> 匯出 CSV</button>
-        <button class="action-btn" id="p-ijson" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> 匯入 JSON</button>
-      </div>
-      <div class="panel-sec"><div class="panel-sec-title">危險操作</div>
-        <button class="action-btn danger" id="p-clear" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> 清除所有資料</button>
-        <button class="action-btn danger" id="p-logout" style="margin-top:4px">登出帳號</button>
-      </div>`;
-    $('p-ejson').onclick=exportJSON; $('p-ecsv').onclick=exportCSV;
-    $('p-ijson').onclick=()=>$('import-file').click();
-    $('p-clear').onclick=()=>showConfirm('確定要清除所有資料嗎？此操作無法復原！',()=>{ D={categories:[],items:[]}; save(); render(); closePanel(); });
-    $('p-logout').onclick=()=>{ closePanel(); doSignOut(); };
-  }
+    </div>
+    <div class="panel-sec"><div class="panel-sec-title">顯示欄位</div>
+      ${tv('showPriority','優先度標籤','t-sp')}
+      ${tv('showDue','到期日','t-sd')}
+      ${tv('showTags','標籤','t-st')}
+      ${tv('showTagAdd','新增標籤圖示','t-sta')}
+      ${tv('showRoutine','週期標籤','t-sr')}
+      ${tv('showQuickAdd','快速新增項目欄','t-sqa')}
+      ${tv('showSubInput','新增子項目欄位','t-ssi')}
+    </div>
+    <div class="panel-sec"><div class="panel-sec-title">資料備份</div>
+      <button class="action-btn" id="p-ejson" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> 匯出 JSON</button>
+      <button class="action-btn" id="p-ecsv" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> 匯出 CSV</button>
+      <button class="action-btn" id="p-ijson" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> 匯入 JSON</button>
+    </div>
+    <div class="panel-sec"><div class="panel-sec-title">帳號</div>
+      <button class="action-btn danger" id="p-clear" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> 清除所有資料</button>
+      <button class="action-btn" id="p-logout" style="display:flex;align-items:center;gap:7px;margin-top:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> 登出帳號</button>
+    </div>`;
+  $('p-mgr').onclick=()=>{ closePanel(); showMgrModal(); };
+  $('t-hc').onchange=ev=>{ S.hideCompleted=ev.target.checked; saveS(); render(); };
+  $('t-cs').onchange=ev=>{ S.completedSink=ev.target.checked; saveS(); render(); };
+  ['showPriority','showDue','showTags','showTagAdd','showRoutine','showQuickAdd','showSubInput'].forEach((key,i)=>{
+    const ids=['t-sp','t-sd','t-st','t-sta','t-sr','t-sqa','t-ssi'];
+    $(ids[i]).onchange=ev=>{ S[key]=ev.target.checked; saveS(); render(); };
+  });
+  body.querySelectorAll('input[name="srt"]').forEach(r=>r.onchange=ev=>{ S.sortBy=ev.target.value; saveS(); render(); body.querySelectorAll('.sort-opt').forEach(o=>o.classList.toggle('active',o.querySelector('input').value===S.sortBy)); });
+  $('p-ejson').onclick=exportJSON; $('p-ecsv').onclick=exportCSV;
+  $('p-ijson').onclick=()=>$('import-file').click();
+  $('p-clear').onclick=()=>showConfirm('確定要清除所有資料嗎？此操作無法復原！',()=>{ D={categories:[],items:[]}; save(); render(); closePanel(); });
+  $('p-logout').onclick=()=>{ closePanel(); doSignOut(); };
   $('right-panel').classList.add('open');
   $('panel-backdrop').classList.add('open');
 }
@@ -1628,6 +1653,7 @@ function toast(msg,undoFn){
 
 // ── Utils ──
 function $(id){ return document.getElementById(id); }
+function $set(id,prop,val){ const el=document.getElementById(id); if(el) el[prop]=val; }
 function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ══════════════════════════════════════════
