@@ -41,8 +41,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 #sidebar.collapsed .ni-label,#sidebar.collapsed .ni-count,#sidebar.collapsed .logo-text,
 #sidebar.collapsed .sb-section-title,#sidebar.collapsed .settings-btn span{display:none}
 #sidebar.collapsed .nav-item,#sidebar.collapsed .settings-btn{justify-content:center;padding:9px}
-/* Keep sb-header layout correct when collapsed */
-#sidebar.collapsed .sb-header{padding:14px 10px;justify-content:center}
+#sidebar.collapsed .sb-header{padding:10px 8px;justify-content:center;gap:0}
 #sidebar.collapsed .logo{display:none}
 #sidebar.collapsed .sb-toggle{margin:0}
 
@@ -174,12 +173,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 #hamburger{width:34px;height:34px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg-card);cursor:pointer;align-items:center;justify-content:center;color:var(--text-secondary);transition:all .15s;flex-shrink:0;display:none}
 #hamburger:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
 /* ── Sync indicator ── */
-#sync-indicator{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);padding:0 4px;height:34px;border-radius:var(--radius-sm);transition:all .2s;white-space:nowrap}
-#sync-dot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .3s}
-#sync-indicator.syncing #sync-dot{background:#f59e0b;animation:pulse 1s infinite}
-#sync-indicator.ok #sync-dot{background:var(--primary)}
-#sync-indicator.error #sync-dot{background:#ef4444}
-#sync-indicator.ok #sync-text,#sync-indicator.error #sync-text{font-size:10px}
+/* sync indicator moved to panel */
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 /* Sync conflict modal */
 .conflict-option{display:flex;gap:10px;margin-bottom:8px}
@@ -213,6 +207,11 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 #user-badge{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);padding:0 4px;cursor:pointer;border-radius:var(--radius-sm);height:34px;transition:all .15s;white-space:nowrap;max-width:140px;overflow:hidden}
 #user-badge:hover{background:var(--primary-light);color:var(--primary)}
 #user-email{overflow:hidden;text-overflow:ellipsis;max-width:110px}
+
+/* ── FAB (floating add button) ── */
+#add-btn{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(29,158,117,.4);z-index:150;transition:all .2s}
+#add-btn:hover{background:var(--primary-dark);transform:scale(1.08);box-shadow:0 6px 20px rgba(29,158,117,.5)}
+#add-btn:active{transform:scale(.96)}
 /* ── Right panel ── */
 #panel-backdrop{position:fixed;inset:0;z-index:199;display:none}
 #panel-backdrop.open{display:block}
@@ -345,7 +344,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   <div class="sb-header">
     <div class="logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
     <span class="logo-text">TaskFlow</span>
-    <button class="sb-toggle" id="sb-toggle" data-open="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button class="sb-toggle" id="sb-toggle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
   </div>
   <nav class="sb-nav" id="sb-nav">
     <div class="nav-item active" data-view="all"><span class="ni-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="ni-label">所有任務</span><span class="ni-count" id="cnt-all">0</span></div>
@@ -364,14 +363,12 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 <!-- Main -->
 <div id="main">
   <div id="topbar">
+    <button id="hamburger" title="選單"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <div id="cat-tabs"></div>
     <div class="topbar-tools">
-      <button id="hamburger" title="選單"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
       <div id="search-bar"><input type="text" id="search-input" placeholder="搜尋任務…"></div>
-      <div id="sync-indicator" title="同步狀態"><span id="sync-dot"></span><span id="sync-text"></span></div>
       <button class="tool-btn" id="search-btn" title="搜尋"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
       <button class="tool-btn" id="sort-btn" title="選單"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6" stroke-width="3" stroke-linecap="round"/><line x1="3" y1="12" x2="3.01" y2="12" stroke-width="3" stroke-linecap="round"/><line x1="3" y1="18" x2="3.01" y2="18" stroke-width="3" stroke-linecap="round"/></svg></button>
-      <button class="tool-btn" id="add-btn" title="新增任務" style="background:var(--primary);color:#fff;border-color:var(--primary)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
     </div>
   </div>
   <div id="routine-bar">
@@ -403,12 +400,13 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 <div id="toast-box"></div>
 <input type="file" id="import-file" accept=".json" style="display:none">
 
+<button id="add-btn" title="新增任務"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
 <script>
 // ══════════════════════════════════════════
 //  CONSTANTS & STATE
 // ══════════════════════════════════════════
 const KEY='tf5_data', KSET='tf5_settings', KBKP='tf5_last_backup', KRT='tf5_last_routine';
-const DEF={sortBy:'manual',completedSink:true,hideCompleted:false,showPriority:true,showDue:true,showTags:true,showTagAdd:true,showRoutine:true,showQuickAdd:true,showSubInput:true};
+const DEF={sortBy:'manual',completedSink:true,hideCompleted:false,showPriority:true,showDue:true,showTags:true,showTagAdd:true,showRoutine:true,showQuickAdd:true,showSubInput:true,showRoutineBar:true};
 
 let D={categories:[],items:[]};   // main data
 let S={...DEF};                    // settings
@@ -518,8 +516,7 @@ async function doSignOut(){
   if(currentUserId) localStorage.removeItem(userKey(KEY));
   currentUserId=null; sbSession=null;
   // user-email removed from DOM
-  document.getElementById('sync-text').textContent='';
-  document.getElementById('sync-dot').style.background='';
+  setSyncUI('','');
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('auth-email').value='';
   document.getElementById('auth-pw').value='';
@@ -533,8 +530,7 @@ function doGuest(){
   document.getElementById('auth-screen').classList.add('hidden');
   window._userEmail='訪客';
   // user-badge removed from DOM
-  document.getElementById('sync-text').textContent='訪客模式';
-  document.getElementById('sync-dot').style.background='#f59e0b';
+  setSyncUI('syncing','訪客模式');
   // Seed demo data in memory only
   D={categories:[],items:[]};
   try{ S={...DEF,...JSON.parse(localStorage.getItem(KSET))}; }catch(e){}
@@ -622,10 +618,14 @@ function saveS(){ localStorage.setItem(KSET,JSON.stringify(S)); }
 //  SYNC — push / pull / poll
 // ══════════════════════════════════════════
 function setSyncUI(state, text){
-  const el=document.getElementById('sync-indicator');
-  if(!el) return;
-  el.className=state;
-  document.getElementById('sync-text').textContent=text;
+  // Panel sync row (shown when panel is open)
+  const dot=document.getElementById('panel-sync-dot');
+  const txt=document.getElementById('panel-sync-text');
+  const colors={syncing:'#f59e0b',ok:'#1D9E75',error:'#ef4444'};
+  if(dot) dot.style.background=colors[state]||'var(--border)';
+  if(txt) txt.textContent=text;
+  // Store for next panel open
+  window._syncState={state,text};
 }
 
 // Debounced push: wait 800ms after last save before pushing
@@ -880,6 +880,7 @@ function renderTagNav(){
 }
 
 function renderRtBar(){
+  if(!S.showRoutineBar){ $("routine-bar").classList.remove("show"); return; }
   const bar=$('routine-bar');
   const ri=D.items.filter(i=>hasRoutine(i));
   if(!ri.length&&view!=='routine'){ bar.classList.remove('show'); return; }
@@ -1352,7 +1353,7 @@ $('sort-btn').addEventListener('click',()=>openPanel());
 $('open-settings').addEventListener('click',()=>openPanel());
 $('panel-close').addEventListener('click',closePanel);
 $('panel-backdrop').addEventListener('click',closePanel);
-$('add-btn').addEventListener('click',()=>showAddItem(null,null));
+  $('add-btn').addEventListener('click',()=>showAddItem(null,null));
 
 function setView(v){
   view=v;
@@ -1366,7 +1367,10 @@ function openPanel(){
   $('panel-title').textContent='選單';
   const tv=(key,label,id)=>`<div class="toggle-row"><span class="toggle-label">${label}</span><label class="toggle"><input type="checkbox" id="${id}" ${S[key]?'checked':''}><span class="toggle-track"></span></label></div>`;
   const userLine=window._userEmail?`<div class="panel-user-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${window._userEmail}</div>`:'';
+  const _ss=window._syncState||{state:'',text:'--'};
+  const syncLine=`<div id="panel-sync-row" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);margin-bottom:8px"><span id="panel-sync-dot" style="width:7px;height:7px;border-radius:50%;background:${{'syncing':'#f59e0b','ok':'#1D9E75','error':'#ef4444'}[_ss.state]||'var(--border)'};flex-shrink:0"></span><span id="panel-sync-text">${_ss.text}</span></div>`;
   body.innerHTML=`
+    ${syncLine}
     ${userLine}
     <div class="panel-sec"><div class="panel-sec-title">分類管理</div>
       <button class="action-btn" id="p-mgr" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> 管理分類</button>
@@ -1388,6 +1392,7 @@ function openPanel(){
       ${tv('showRoutine','週期標籤','t-sr')}
       ${tv('showQuickAdd','快速新增項目欄','t-sqa')}
       ${tv('showSubInput','新增子項目欄位','t-ssi')}
+      ${tv('showRoutineBar','今日 Routine 進度條','t-srb')}
     </div>
     <div class="panel-sec"><div class="panel-sec-title">資料備份</div>
       <button class="action-btn" id="p-ejson" style="display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> 匯出 JSON</button>
@@ -1401,8 +1406,8 @@ function openPanel(){
   $('p-mgr').onclick=()=>{ closePanel(); showMgrModal(); };
   $('t-hc').onchange=ev=>{ S.hideCompleted=ev.target.checked; saveS(); render(); };
   $('t-cs').onchange=ev=>{ S.completedSink=ev.target.checked; saveS(); render(); };
-  ['showPriority','showDue','showTags','showTagAdd','showRoutine','showQuickAdd','showSubInput'].forEach((key,i)=>{
-    const ids=['t-sp','t-sd','t-st','t-sta','t-sr','t-sqa','t-ssi'];
+  ['showPriority','showDue','showTags','showTagAdd','showRoutine','showQuickAdd','showSubInput','showRoutineBar'].forEach((key,i)=>{
+    const ids=['t-sp','t-sd','t-st','t-sta','t-sr','t-sqa','t-ssi','t-srb'];
     $(ids[i]).onchange=ev=>{ S[key]=ev.target.checked; saveS(); render(); };
   });
   body.querySelectorAll('input[name="srt"]').forEach(r=>r.onchange=ev=>{ S.sortBy=ev.target.value; saveS(); render(); body.querySelectorAll('.sort-opt').forEach(o=>o.classList.toggle('active',o.querySelector('input').value===S.sortBy)); });
