@@ -215,7 +215,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 /* ── Right panel ── */
 #panel-backdrop{position:fixed;inset:0;z-index:199;display:none}
 #panel-backdrop.open{display:block}
-#right-panel{width:300px;background:var(--bg-card);border-left:1px solid var(--border);padding:16px;padding-bottom:env(safe-area-inset-bottom,16px);overflow-y:auto;flex-shrink:0;transform:translateX(100%);transition:transform .25s;position:fixed;right:0;top:0;height:100dvh;height:100vh;z-index:200;box-shadow:var(--shadow-lg);display:none}
+#right-panel{width:300px;background:var(--bg-card);border-left:1px solid var(--border);padding:16px;padding-bottom:max(80px,calc(60px + env(safe-area-inset-bottom,0px)));overflow-y:auto;flex-shrink:0;transform:translateX(100%);transition:transform .25s;position:fixed;right:0;top:0;height:100dvh;height:100vh;z-index:200;box-shadow:var(--shadow-lg);display:none}
 #right-panel.open{transform:translateX(0);display:block}
 .panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .panel-title{font-size:15px;font-weight:700}
@@ -905,7 +905,7 @@ function renderMain(){
       h=cats.map(cat=>renderCatSection(cat,its.filter(i=>i.catId===cat.id))).join('');
       const unc=its.filter(i=>!i.catId);
       if(unc.length) h+=`<div class="cat-section"><div class="cat-header"><span style="font-size:15px;font-weight:700;color:var(--text-secondary)">未分類</span></div><div class="subcat-block"><div class="subcat-body"><div class="items-list">${unc.map(renderItemHTML).join('')}</div><div class="quick-add-row"><input class="quick-add-input" placeholder="＋ 快速新增… (Enter)" data-catid="" data-scid=""></div></div></div></div>`;
-      if(!cats.length&&!unc.length) h=`<div class="empty-state"><div class="es-icon" style="color:var(--border)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div><p>還沒有任務，點右上角「＋」新增吧！</p></div>`;
+      if(!cats.length&&!unc.length) h=`<div class="empty-state"><div class="es-icon" style="color:var(--border)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div><p>還沒有任務，點右下角「＋」新增吧！</p></div>`;
     }
     mc.innerHTML=h;
   } else {
@@ -1626,12 +1626,16 @@ $('import-file').onchange=ev=>{
   const reader=new FileReader();
   reader.onload=r=>{
     try{
-      const raw=r.result.replace(/^\uFEFF/,'').trim();
+      // Strip BOM and whitespace
+      const raw=r.result.replace(/^[\uFEFF\s]+/,'');
       const parsed=JSON.parse(raw);
-      // Support both {data:{...}} wrapper and bare {categories,items} format
-      const imp=parsed.data&&parsed.data.categories?parsed.data:
-                parsed.categories?parsed:null;
-      if(!imp||!Array.isArray(imp.categories)||!Array.isArray(imp.items)) throw new Error('invalid');
+      // Support all formats: {data:{categories,items}}, {categories,items}, or nested
+      let imp=null;
+      if(parsed&&parsed.data&&Array.isArray(parsed.data.categories)) imp=parsed.data;
+      else if(parsed&&Array.isArray(parsed.categories)) imp=parsed;
+      else if(parsed&&parsed.data&&Array.isArray(parsed.data.items)) imp=parsed.data;
+      if(!imp){ console.error('Import: unrecognised format',JSON.stringify(parsed).slice(0,200)); throw new Error('invalid'); }
+      imp.categories=imp.categories||[]; imp.items=imp.items||[];
       showModal(`<h3>匯入 JSON</h3><p class="confirm-msg">請選擇匯入方式：</p>
         <div style="display:flex;gap:8px"><button class="btn btn-d" id="imp-ow">覆蓋現有</button><button class="btn btn-p" id="imp-mg">合併新增</button></div>`,null,false);
       $('imp-ow').onclick=()=>{ D=imp; save(); render(); closeModal(); toast('已覆蓋匯入'); };
