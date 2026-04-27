@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>TaskFlow</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -17,10 +17,10 @@
   --p3:#eab308;--p3-bg:#fefce8;--p4:#22c55e;--p4-bg:#f0fdf4;--p5:#3b82f6;--p5-bg:#eff6ff;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text-primary);height:100vh;display:flex;overflow:hidden;font-size:14px}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text-primary);height:100dvh;height:100vh;display:flex;overflow:hidden;font-size:14px}
 
 /* ── Sidebar ── */
-#sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);display:flex;flex-direction:column;transition:width .25s;overflow:hidden;flex-shrink:0;z-index:100}
+#sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);display:flex;flex-direction:column;transition:width .25s;overflow:hidden;flex-shrink:0;z-index:100;height:100dvh;height:100vh}
 #sidebar.collapsed{width:48px}
 .sb-header{display:flex;align-items:center;gap:8px;padding:18px 14px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
 .logo{width:28px;height:28px;background:var(--primary);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
@@ -70,7 +70,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .rt-label{font-size:12px;color:var(--text-secondary);white-space:nowrap}
 
 /* ── Content ── */
-#content{flex:1;overflow-y:auto;padding:16px;padding-bottom:40px}
+#content{flex:1;overflow-y:auto;padding:16px;padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 
 /* ── Category ── */
 .cat-section{margin-bottom:20px}
@@ -127,7 +127,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .tag-chip-edit{cursor:pointer}.tag-chip-edit:hover{background:var(--primary);color:#fff}
 .tag-add-icon{display:inline-flex;align-items:center;cursor:pointer;color:var(--text-muted);padding:1px 3px;border-radius:4px;vertical-align:middle;transition:color .15s}
 .tag-add-icon:hover{color:var(--primary)}
-@media(max-width:600px){.due-chip,.tag-chip{display:none}}
+/* due-chip and tag-chip visible on all screen sizes */
 .rt-icon{font-size:11px;color:var(--primary);background:var(--primary-light);padding:2px 7px;border-radius:10px;cursor:pointer;border:none;font-family:inherit}
 .rt-icon:hover{background:var(--primary);color:#fff}
 .item-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s;flex-shrink:0}
@@ -183,7 +183,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 
 .panel-user-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--primary-light);border-radius:var(--radius-sm);font-size:12px;color:var(--primary);font-weight:500;margin-bottom:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ── Auth screen ── */
-#auth-screen{position:fixed;inset:0;background:var(--bg-sidebar);z-index:9999;display:flex;align-items:center;justify-content:center}
+#auth-screen{position:fixed;inset:0;background:var(--bg-sidebar);z-index:9999;display:flex;align-items:center;justify-content:center;min-height:100dvh;min-height:100vh}
 #auth-screen.hidden{display:none}
 .auth-box{background:#fff;border-radius:16px;padding:36px 32px;width:360px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .auth-logo{width:52px;height:52px;background:var(--primary);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
@@ -209,13 +209,13 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 #user-email{overflow:hidden;text-overflow:ellipsis;max-width:110px}
 
 /* ── FAB (floating add button) ── */
-#add-btn{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(29,158,117,.4);z-index:150;transition:all .2s}
+#add-btn{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom, 0px));right:24px;width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(29,158,117,.4);z-index:150;transition:all .2s}
 #add-btn:hover{background:var(--primary-dark);transform:scale(1.08);box-shadow:0 6px 20px rgba(29,158,117,.5)}
 #add-btn:active{transform:scale(.96)}
 /* ── Right panel ── */
 #panel-backdrop{position:fixed;inset:0;z-index:199;display:none}
 #panel-backdrop.open{display:block}
-#right-panel{width:300px;background:var(--bg-card);border-left:1px solid var(--border);padding:16px;overflow-y:auto;flex-shrink:0;transform:translateX(100%);transition:transform .25s;position:fixed;right:0;top:0;height:100vh;z-index:200;box-shadow:var(--shadow-lg);display:none}
+#right-panel{width:300px;background:var(--bg-card);border-left:1px solid var(--border);padding:16px;padding-bottom:env(safe-area-inset-bottom,16px);overflow-y:auto;flex-shrink:0;transform:translateX(100%);transition:transform .25s;position:fixed;right:0;top:0;height:100dvh;height:100vh;z-index:200;box-shadow:var(--shadow-lg);display:none}
 #right-panel.open{transform:translateX(0);display:block}
 .panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .panel-title{font-size:15px;font-weight:700}
@@ -290,7 +290,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 
 @media(max-width:768px){
   /* Sidebar becomes a drawer */
-  #sidebar{position:fixed;top:0;left:0;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .25s;width:var(--sidebar-w)!important}
+  #sidebar{position:fixed;top:0;left:0;height:100dvh;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .25s;width:var(--sidebar-w)!important}
   #sidebar.mobile-open{transform:translateX(0)}
   #sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:299}
   #sb-overlay.show{display:block}
@@ -1626,7 +1626,12 @@ $('import-file').onchange=ev=>{
   const reader=new FileReader();
   reader.onload=r=>{
     try{
-      const imp=(JSON.parse(r.result).data)||JSON.parse(r.result);
+      const raw=r.result.replace(/^\uFEFF/,'').trim();
+      const parsed=JSON.parse(raw);
+      // Support both {data:{...}} wrapper and bare {categories,items} format
+      const imp=parsed.data&&parsed.data.categories?parsed.data:
+                parsed.categories?parsed:null;
+      if(!imp||!Array.isArray(imp.categories)||!Array.isArray(imp.items)) throw new Error('invalid');
       showModal(`<h3>匯入 JSON</h3><p class="confirm-msg">請選擇匯入方式：</p>
         <div style="display:flex;gap:8px"><button class="btn btn-d" id="imp-ow">覆蓋現有</button><button class="btn btn-p" id="imp-mg">合併新增</button></div>`,null,false);
       $('imp-ow').onclick=()=>{ D=imp; save(); render(); closeModal(); toast('已覆蓋匯入'); };
