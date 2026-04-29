@@ -601,8 +601,14 @@ let syncTimer=null, lastSyncedAt=0, remoteVersion=0, pollTimer=null;
 //  STORAGE  (localStorage = offline cache per user)
 // ══════════════════════════════════════════
 function userKey(k){ return currentUserId ? k+'_'+currentUserId.slice(0,8) : k; }
+function normalizeData(d){
+  // Ensure all items have required fields that may be missing from old data
+  (d.items||[]).forEach(i=>{ if(!i.subitems) i.subitems=[]; if(!i.tags) i.tags=[]; });
+  (d.categories||[]).forEach(cat=>{ if(!cat.subcategories) cat.subcategories=[]; });
+  return d;
+}
 function load(){
-  try{ D=JSON.parse(localStorage.getItem(userKey(KEY)))||{categories:[],items:[]}; }catch(e){ D={categories:[],items:[]}; }
+  try{ D=normalizeData(JSON.parse(localStorage.getItem(userKey(KEY)))||{categories:[],items:[]}); }catch(e){ D={categories:[],items:[]}; }
   D.categories=D.categories||[]; D.items=D.items||[];
   try{ S={...DEF,...JSON.parse(localStorage.getItem(KSET))}; }catch(e){}
   try{ remoteVersion=parseInt(localStorage.getItem(userKey('tf5_rv'))||'0'); }catch(e){}
@@ -689,7 +695,7 @@ async function pullFromCloud(){
       await showConflictModal(remoteData, rv);
     } else {
       // Safe to overwrite local with remote
-      D=remoteData;
+      D=normalizeData(remoteData);
       D.categories=D.categories||[]; D.items=D.items||[];
       localStorage.setItem(userKey(KEY),JSON.stringify(D));
       remoteVersion=rv;
@@ -904,7 +910,7 @@ function renderMain(){
     } else {
       h=cats.map(cat=>renderCatSection(cat,its.filter(i=>i.catId===cat.id))).join('');
       const unc=its.filter(i=>!i.catId);
-      if(unc.length) h+=`<div class="cat-section"><div class="cat-header"><span style="font-size:15px;font-weight:700;color:var(--text-secondary)">未分類</span></div><div class="subcat-block"><div class="subcat-body"><div class="items-list">${unc.map(renderItemHTML).join('')}</div><div class="quick-add-row"><input class="quick-add-input" placeholder="＋ 快速新增… (Enter)" data-catid="" data-scid=""></div></div></div></div>`;
+      if(unc.length) h+=`<div class="cat-section"><div class="cat-header"><span style="font-size:15px;font-weight:700;color:var(--text-secondary)">未分類</span></div><div class="subcat-block"><div class="subcat-body"><div class="items-list">${unc.map(renderItemHTML).join('')}</div><div class="quick-add-row"><input class="quick-add-input" placeholder="＋ 快速新增…" data-catid="" data-scid="" enterkeyhint="done"></div></div></div></div>`;
       if(!cats.length&&!unc.length) h=`<div class="empty-state"><div class="es-icon" style="color:var(--border)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div><p>還沒有任務，點右下角「＋」新增吧！</p></div>`;
     }
     mc.innerHTML=h;
@@ -945,7 +951,7 @@ function renderCatSection(cat,catItems){
       </div>
       <div class="subcat-body${collapsed?' hidden':''}">
         <div class="items-list">${subItems.map(renderItemHTML).join('')}</div>
-        ${S.showQuickAdd?`<div class="quick-add-row"><input class="quick-add-input" placeholder="＋ 快速新增… (Enter)" data-catid="${cat.id}" data-scid="${sub.id}"></div>`:''}
+        ${S.showQuickAdd?`<div class="quick-add-row"><input class="quick-add-input" placeholder="＋ 快速新增…" data-catid="${cat.id}" data-scid="${sub.id}" enterkeyhint="done"></div>`:''}
       </div>
     </div>`;
   });
@@ -959,7 +965,7 @@ function renderCatSection(cat,catItems){
       </div>
       <div class="subcat-body">
         <div class="items-list">${direct.map(renderItemHTML).join('')}</div>
-        ${S.showQuickAdd?`<div class="quick-add-row"><input class="quick-add-input" placeholder="＋ 快速新增… (Enter)" data-catid="${cat.id}" data-scid=""></div>`:''}
+        ${S.showQuickAdd?`<div class="quick-add-row"><input class="quick-add-input" placeholder="＋ 快速新增…" data-catid="${cat.id}" data-scid="" enterkeyhint="done"></div>`:''}
       </div>
     </div>`;
   }
@@ -1034,7 +1040,7 @@ function renderItemHTML(it){
   const sc=subs.length, sd=subs.filter(s=>s.completed).length;
   const open=openSubitems.has(it.id);
   // subitem toggle/add is now in item-actions as sub-add-btn
-  const siH=open?`<div class="subitems-section">${subs.map(s=>renderSIHTML(it.id,s)).join('')}${S.showSubInput?`<div class="add-sub-row"><input class="add-sub-input" placeholder="新增子項目… Enter 送出" data-iid="${it.id}"></div>`:''}</div>`:'';;
+  const siH=open?`<div class="subitems-section">${subs.map(s=>renderSIHTML(it.id,s)).join('')}${S.showSubInput?`<div class="add-sub-row"><input class="add-sub-input" placeholder="新增子項目…" data-iid="${it.id}" enterkeyhint="done"></div>`:''}</div>`:'';;
   return `<div class="item-row${it.completed?' completed':''}" draggable="true" data-iid="${it.id}">
     <input type="checkbox" class="item-cb" ${it.completed?'checked':''} data-a="toggle-item" data-iid="${it.id}">
     <div class="item-main">
@@ -1181,8 +1187,8 @@ function initEvents(){
     }
   });
 
-  // ── Content keydown — FIX: prevent duplicate by stopping propagation & preventing default ──
-  content.addEventListener('keydown',ev=>{
+  // ── Content enter handler (keydown + keyup for mobile compatibility) ──
+  function handleEnter(ev){
     if(ev.key!=='Enter') return;
 
     // Quick add item
@@ -1194,7 +1200,6 @@ function initEvents(){
       addItem({name:val,catId:catid||null,subCatId:scid||null});
       ev.target.value='';
       render();
-      // Restore focus to the same quick-add input after render
       requestAnimationFrame(()=>{
         const inputs=document.querySelectorAll('.quick-add-input');
         for(const inp of inputs){
@@ -1204,7 +1209,7 @@ function initEvents(){
       return;
     }
 
-    // Add subitem — FIX: use flag to prevent duplicate fires
+    // Add subitem
     if(ev.target.classList.contains('add-sub-input')){
       ev.preventDefault(); ev.stopPropagation();
       if(ev.target._processing) return;
@@ -1215,7 +1220,6 @@ function initEvents(){
         addSI(iid,val);
         ev.target.value='';
         patchItem(iid);
-        // re-focus after patch
         requestAnimationFrame(()=>{
           const inp=document.querySelector(`.add-sub-input[data-iid="${iid}"]`);
           if(inp){ inp._processing=false; inp.focus(); }
@@ -1225,7 +1229,9 @@ function initEvents(){
       }
       return;
     }
-  });
+  }
+  content.addEventListener('keydown', handleEnter);
+  content.addEventListener('keyup', handleEnter);
 
   // ── Content blur — inline name edits, NO render trigger ──
   content.addEventListener('blur',ev=>{
@@ -1614,8 +1620,13 @@ function exportJSON(){
   localStorage.setItem(KBKP,Date.now());
 }
 function exportCSV(){
-  const rows=[['ID','名稱','分類','子分類','優先度','到期日','標籤','已完成','建立時間']];
-  D.items.forEach(i=>rows.push([i.id,i.name,getCat(i.catId)?.name||'',getSub(i.catId,i.subCatId)?.name||'',i.priority||'',i.due||'',(i.tags||[]).join(';'),i.completed?'是':'否',new Date(i.createdAt).toLocaleDateString()]));
+  const rows=[['ID','名稱','類型','分類','子分類','優先度','到期日','標籤','已完成','建立時間']];
+  D.items.forEach(i=>{
+    rows.push([i.id,i.name,'項目',getCat(i.catId)?.name||'',getSub(i.catId,i.subCatId)?.name||'',i.priority||'',i.due||'',(i.tags||[]).join(';'),i.completed?'是':'否',new Date(i.createdAt).toLocaleDateString()]);
+    (i.subitems||[]).forEach(s=>{
+      rows.push([s.id,'  └ '+s.name,'子項目',getCat(i.catId)?.name||'',getSub(i.catId,i.subCatId)?.name||'','','','',s.completed?'是':'否','']);
+    });
+  });
   dl(new Blob(['\uFEFF'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}),'taskflow-export.csv');
   localStorage.setItem(KBKP,Date.now());
 }
@@ -1626,8 +1637,7 @@ $('import-file').onchange=ev=>{
   const reader=new FileReader();
   reader.onload=r=>{
     try{
-      // Strip BOM and whitespace
-      const raw=r.result.replace(/^[\uFEFF\s]+/,'');
+      const raw=(r.target.result||'').replace(/^[\uFEFF\s]+/,'');
       const parsed=JSON.parse(raw);
       // Support all formats: {data:{categories,items}}, {categories,items}, or nested
       let imp=null;
@@ -1638,13 +1648,56 @@ $('import-file').onchange=ev=>{
       imp.categories=imp.categories||[]; imp.items=imp.items||[];
       showModal(`<h3>匯入 JSON</h3><p class="confirm-msg">請選擇匯入方式：</p>
         <div style="display:flex;gap:8px"><button class="btn btn-d" id="imp-ow">覆蓋現有</button><button class="btn btn-p" id="imp-mg">合併新增</button></div>`,null,false);
-      $('imp-ow').onclick=()=>{ D=imp; save(); render(); closeModal(); toast('已覆蓋匯入'); };
-      $('imp-mg').onclick=()=>{
-        (imp.categories||[]).forEach(c=>{ if(!getCat(c.id)) D.categories.push(c); });
-        (imp.items||[]).forEach(i=>{ if(!getItem(i.id)) D.items.push(i); });
-        save(); render(); closeModal(); toast('已合併匯入');
+      $('imp-ow').onclick=async()=>{
+        D=normalizeData(imp);
+        localStorage.setItem(userKey(KEY),JSON.stringify(D));
+        render();
+        closeModal(); toast('正在匯入…');
+        clearTimeout(syncTimer);
+        await pushToCloud();
+        toast('已覆蓋匯入');
       };
-    }catch(err){ toast('匯入失敗：格式有誤'); }
+      $('imp-mg').onclick=()=>{
+        let addedCats=0, addedItems=0, addedSubs=0;
+        // Merge categories
+        (imp.categories||[]).forEach(ic=>{
+          const existById=getCat(ic.id);
+          const existByName=D.categories.find(dc=>dc.name===ic.name);
+          if(!existById&&!existByName){ D.categories.push(ic); addedCats++; }
+          else {
+            const target=existById||existByName;
+            (ic.subcategories||[]).forEach(isc=>{
+              const hasSub=(target.subcategories||[]).find(s=>s.id===isc.id||s.name===isc.name);
+              if(!hasSub){ if(!target.subcategories) target.subcategories=[]; target.subcategories.push(isc); }
+            });
+          }
+        });
+        // Merge items
+        (imp.items||[]).forEach(ii=>{
+          const existById=getItem(ii.id);
+          const existByName=D.items.find(di=>di.name===ii.name&&di.catId===ii.catId&&di.subCatId===ii.subCatId);
+          if(!existById&&!existByName){
+            D.items.push(ii); addedItems++;
+          } else {
+            const target=existById||existByName;
+            if(!target.subitems) target.subitems=[];
+            (ii.subitems||[]).forEach(is=>{
+              const hasSub=target.subitems.find(s=>s.id===is.id||s.name===is.name);
+              if(!hasSub){ target.subitems.push(is); addedSubs++; }
+            });
+          }
+        });
+        // Save to localStorage immediately
+        localStorage.setItem(userKey(KEY), JSON.stringify(D));
+        // Set lastSyncedAt so pullFromCloud treats this as local-newer and won't overwrite
+        lastSyncedAt = Date.now();
+        render(); closeModal();
+        toast(`合併中：新增 ${addedCats} 個分類、${addedItems} 個項目、${addedSubs} 個子項目`);
+        // Push to cloud immediately (bypass debounce)
+        clearTimeout(syncTimer);
+        pushToCloud().then(()=>toast(`已合併完成`));
+      };
+    }catch(err){ console.error('Import error:',err); toast('匯入失敗：格式有誤'); }
   };
   reader.readAsText(file);
   ev.target.value='';
